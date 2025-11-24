@@ -23,3 +23,10 @@ app.use(express.urlencoded({extended:true}))
 // extended: true	supports nested objects & arrays
 app.use(cookieParser())
 app.use(express.static("public"))
+
+//routes import
+
+import userRouter from './routes/user.routes.js'
+
+//route declaration
+app.use("/api/v1/users",userRouter)
