@@ -1,37 +1,65 @@
-import { v2 as cloudinary } from cloudinary
-import fs from "fs" //file system in node js, help to perform operation on files
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+import dotenv from "dotenv";
+
+// Load .env from backend root
+dotenv.config({ path: "../../.env" });
 
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
 });
-
-
-// Upload an image
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null
         //upload the file on cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: auto
+            resource_type: "auto"
         })
-         /* The option `resource_type: auto` means:
-         ✔ Cloudinary will automatically detect the type of file  
-         (image, video, pdf, etc.)*/
-
         // file has been uploaded successfull
         console.log("file is uploaded on cloudinary ", response.url);
-        fs.unlinkSync(localFilePath);
-        return response
+        fs.unlinkSync(localFilePath)
+        return response;
 
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file
-        //  as the upload operation got failed
-        return null
+            console.error("Upload failed:", error);
+    fs.unlinkSync(localFilePath); // comment out to see file still exists
+    return null;
+
     }
-} 
+}
+
+
 
 export {uploadOnCloudinary}
+
+
+// test if it is uploading on cloudinary
+
+// const testUpload = async () => {
+//   const filePath = "./abc.mp4";
+//   console.log("Checking if file exists:", fs.existsSync(filePath));
+//   const result = await uploadOnCloudinary(filePath);
+// };
+
+// testUpload();
+
+
+// [Frontend: selects file]
+//            ↓
+// POST /upload (multipart/form-data)
+//            ↓
+// [Multer: parses & saves file temporarily]
+//            ↓
+// [Backend: calls Cloudinary upload]
+//            ↓
+// [Cloudinary: uploads & returns URL]
+//            ↓
+// [Backend: deletes temp file]
+//            ↓
+// [Frontend: receives Cloudinary URL & shows image]
+
+

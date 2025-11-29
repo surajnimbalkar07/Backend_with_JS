@@ -7,6 +7,7 @@ class ApiResponse{
     }
 }
 
+export {ApiResponse}
 // ApiResponse standardizes the format of successful API responses.
 // It adds statusCode, data, message, and sets success = statusCode < 400.
 // This helps maintain consistency across the entire backend.
