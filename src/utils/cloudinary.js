@@ -6,10 +6,10 @@ import dotenv from "dotenv";
 dotenv.config({ path: "../../.env" });
 
 
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
@@ -25,16 +25,16 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response;
 
     } catch (error) {
-            console.error("Upload failed:", error);
-    fs.unlinkSync(localFilePath); // comment out to see file still exists
-    return null;
+        console.error("Upload failed:", error);
+        fs.unlinkSync(localFilePath); // comment out to see file still exists
+        return null;
 
     }
 }
 
 
 
-export {uploadOnCloudinary}
+export { uploadOnCloudinary }
 
 
 // test if it is uploading on cloudinary
