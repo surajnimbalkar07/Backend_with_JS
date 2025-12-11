@@ -74,7 +74,7 @@ const registerUser = asyncHandler(async (req, res) => {
         avatar: avatar.url, //pura avatar na leke sirf uski url liyi he
         coverImage: coverImage?.url || "",//if image is there then url or empty 
         email,
-        password,
+        password,//password will hash automatically using pre hook declred in user model
         username: username.toLowerCase(),
 
 
@@ -133,7 +133,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-
+//login
 const loginUser = asyncHandler(async (req, res) => {
 
     const { email, password, username } = req.body;
@@ -249,15 +249,139 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
-      throw new ApiError(401,error?.message||"Invalid refresh token")
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+        
     }
 
 
 })
+
+const changeCurrentUserPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user?._id);
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200).json(new ApiResponse(200, {}, "password changed successfully"))
+})
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "current user fetched successfully"))
+});
+
+//updating account details
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullname, email } = req.body;
+
+    if (!fullname || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullname,
+                email: email,
+
+            }
+        },
+        { new: true }
+
+    ).select("-password")
+
+    return res.status(200).json(new ApiResponse(200,user, "Account details updated successfully"))
+
+})
+
+//update avatar
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    //get avatar file path
+    const avatarLocalPath = req.file?.path;
+
+    //if not present
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "avatar file is missing")
+    }
+    //if present
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    //if doesnt uploaded succesfully
+    if (!avatar.url) {
+        throw new ApiError(400, "error while uploading on avatar")
+    }
+    const user = await User.findByIdAndUpdate(
+        //get user by id
+        req.user?._id,
+
+        //use aggregation to update avatar
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        },
+
+        //new :true so mongodb always return new value
+        { new: true }
+
+    ).select("-password");
+
+    return res.status(200).json(new ApiResponse(200, user, "avatar updated successfully"))
+})
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    //get avatar file path
+    const coverImageLocalPath = req.file?.path;
+
+    //if not present
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "cover img file is missing")
+    }
+    //if present
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    //if doesnt uploaded succesfully
+    if (!coverImage.url) {
+        throw new ApiError(400, "error while uploading on cover image")
+    }
+    const user = await User.findByIdAndUpdate(
+        //get user by id
+        req.user?._id,
+
+        //use aggregation to update avatar
+        {
+            $set: {
+                coverImage: coverImage.url
+            }
+        },
+
+        //new :true so mongodb always return new value
+        { new: true }
+
+    ).select("-password");
+
+    //return response
+    return res.status(200).json(new ApiResponse(200, user, "cover image updated successfully"))
+})
+
+
+
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+
+    changeCurrentUserPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserCoverImage,
+    updateUserAvatar,
 
 }
